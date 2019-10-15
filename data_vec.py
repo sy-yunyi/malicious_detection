@@ -22,7 +22,9 @@ def dataVec(file_path):
         for d in data_g:
             if d.split()[0] == "GET":
                 # data_e.append([d.strip()])
-                d = d.strip().split()
+                d = urllib.parse.unquote(urllib.parse.unquote(d.strip()))
+                d = d.split()
+                
                 data_set.append(" ".join([d[0]," ".join(re.split("[?=&]",d[1].split("/")[-1]))]))
 
             elif d.split()[0] == "POST" or d.split()[0] == "PUT":
@@ -60,7 +62,7 @@ if __name__ == "__main__":
     # dataExtract(file_path,out_path)
 
     #数据向量化
-    file_path = "D:\six\code\malicious_detection\data\data_normalTrafficTest"
+    file_path = r"D:\six\code\malicious_detection\data\data_normalTrafficTest"
     dataVec(file_path)
 
 
