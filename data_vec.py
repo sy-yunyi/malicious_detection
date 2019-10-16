@@ -1,6 +1,13 @@
 import os
 import re
 import urllib
+import gensim
+import pdb
+import numpy as np
+import tf_glove
+import tensorflow as tf
+from gensim.test.utils import common_texts
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 def dataExtract(file_path,out_path):
     header = ["User-Agent:","Pragma:","Cache-control:","Accept:","Accept-Encoding:","Accept-Charset:","Accept-Language:","Host:","Cookie:","Connection:","Content-Length:","Content-Type:"]
     data_list = []
@@ -14,7 +21,7 @@ def dataExtract(file_path,out_path):
         for d in data_list:
             pf.write(d)
 
-def dataVec(file_path):
+def data2sen(file_path):
     with open(file_path,'r') as fp:
         data_g = (d for d in fp.readlines())
         # data_e = []
@@ -32,25 +39,28 @@ def dataVec(file_path):
                 ac_end = re.split("[ /]",d.strip()) # 0:post,-3:end
                 args = urllib.parse.unquote(urllib.parse.unquote(data_g.__next__().strip()))
                 data_set.append(" ".join([ac_end[0],ac_end[-3]," ".join(re.split("[?=&]",args))]))
-            print(data_set)
+    return data_set
         
-    # for d in data_e:        
-    #     if len(d) == 1:
-    #         print(d)
-    #         d = d[0].split()
-    #         print(" ".join([d[0]," ".join(re.split("[?=&]",d[1].split("/")[-1]))]))
-    #     elif len(d) == 2:
-    #         print(d)
-    #         ac_end = re.split("[ /]",d[0]) # 0:post,-3:end
-    #         args = urllib.parse.unquote(urllib.parse.unquote(d[1]))
-    #         print(" ".join([ac_end[0],ac_end[-3]," ".join(re.split("[?=&]",args))]))
+            
+def doc2vec_g(data):
+    print("训练模型...")
+    # mords为分割后的单词列表
+    docm = [gensim.models.doc2vec.TaggedDocument(words = words.split(),tags = [i]) for i,words in enumerate(data)]
 
-            
-            
-                
+    model = gensim.models.doc2vec.Doc2Vec(documents=docm,dm=1,vector_size=100,window=8,min_count=5,workers=4)
 
-            
-        
+    # np.savetxt('D:\six\code\malicious_detection\data\d2v.txt',model.docvecs)
+    #单词向量 ： model.wv.vectors; 单词：model.wv.vocab
+    #句子向量 ：model.docvecs.vectors_docs
+    
+def golvec_tf(data):
+    print("训练模型...")
+    model = tf_glove.GloVeModel(embedding_size=50, context_size=10, min_occurrences=25,learning_rate=0.05, batch_size=512)
+    model.fit_to_corpus([words.split() for words in data])
+    model.train(num_epochs=50, log_dir="log/example", summary_batch_interval=1000)
+    pdb.set_trace()
+    
+
                     
 
 
@@ -63,6 +73,9 @@ if __name__ == "__main__":
 
     #数据向量化
     file_path = r"D:\six\code\malicious_detection\data\data_normalTrafficTest"
-    dataVec(file_path)
+    data = data2sen(file_path)
+    pdb.set_trace()
+    # doc2vec_g(data)
+    # golvec_tf(data)
 
 
