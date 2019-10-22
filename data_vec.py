@@ -6,6 +6,7 @@ import pdb
 import numpy as np
 import tf_glove
 import tensorflow as tf
+from sklearn import preprocessing
 from gensim.test.utils import common_texts
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 def dataExtract(file_path,out_path):
@@ -91,6 +92,42 @@ def golvec_tf(data):
     pdb.set_trace()
     
 
+# 对末端路径和参数名进行one-hot编码
+def one_hot(end_path_set,arg_name_set):
+    enc = preprocessing.OneHotEncoder()
+    end_path_np = np.array(end_path_set)
+    end_path_enc = enc.fit(end_path_np.reshape([end_path_np.shape[0],1]))
+
+    enc1 = preprocessing.OneHotEncoder()
+    arg_name_np = np.array([i for ans in arg_name_set for i in re.split("[ ]",ans)])
+    arg_name_enc = enc1.fit(arg_name_np.reshape(arg_name_np.shape[0],1))
+
+    return end_path_enc,arg_name_enc
+
+# 行为分析模型数据向量化
+def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec):
+    batch = 50
+    be_vec = []
+    for i in range(len(data_set)//batch):
+        b_i = []
+        b_data = data_set[i * batch: (i+1)*batch]
+        for eb in b_data:
+            eb = eb.split()
+            b_i.append(0. if eb[0]=="GET" else 1.)
+            b_i.extend(end_path_enc.transform([[eb[1]]]).toarray()[0])
+            arg_ns = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 == 0]
+            arg_vs = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 != 0]
+
+            b_i.extend(arg_name_enc.transform([[i]]).toarray()[0] for i in arg_ns)
+            b_i.extend(arg_val_vec[i] for i in arg_vs)
+            # pdb.set_trace()
+
+
+
+
+    
+
+
                     
 
 
@@ -115,9 +152,15 @@ if __name__ == "__main__":
     #     fp.write("\n".join(data_set))
 
     # 2.向量化
-    
-    word2vec_g(data = "malicious_detection/data/arg_val.txt",train_size = 100)
-    pdb.set_trace()
+    # 行为分析模型
+    # 末端路径，参数名，payload，payload 最长长度
+    file_path = r"D:\six\code\malicious_detection\data\data_normalTrafficTest"
+    data_set,end_path_set,arg_name_set,arg_val_set = data2sen(file_path)
+    end_path_enc,arg_name_enc = one_hot(end_path_set,arg_name_set)
+    arg_val_vec = word2vec_g(data = "malicious_detection/data/arg_val.txt",train_size = 200)
+    beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec)
+
+    # pdb.set_trace()
     # doc2vec_g(data)
     # golvec_tf(data)
 
