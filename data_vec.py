@@ -117,9 +117,12 @@ def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec):
             b_i.extend(end_path_enc.transform([[eb[1]]]).toarray()[0])
             arg_ns = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 == 0]
             arg_vs = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 != 0]
-
-            b_i.extend(arg_name_enc.transform([[i]]).toarray()[0] for i in arg_ns)
-            b_i.extend(arg_val_vec[i] for i in arg_vs)
+            for i in range(len(arg_ns)):
+                b_i.extend(arg_name_enc.transform([[arg_ns[i]]]).toarray()[0])
+                b_i.extend(arg_val_vec[arg_vs[i]].tolist())
+            # print(b_i)
+        be_vec.append(b_i)
+    return be_vec
             # pdb.set_trace()
 
 
