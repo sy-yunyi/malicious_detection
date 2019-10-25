@@ -9,6 +9,8 @@ import tensorflow as tf
 from sklearn import preprocessing
 from gensim.test.utils import common_texts
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from collections import Counter
+import string
 def dataExtract(file_path,out_path):
     header = ["User-Agent:","Pragma:","Cache-control:","Accept:","Accept-Encoding:","Accept-Charset:","Accept-Language:","Host:","Cookie:","Connection:","Content-Length:","Content-Type:"]
     data_list = []
@@ -141,15 +143,54 @@ def n_gram_pay(data,batch=50,n=2):
 
 
 def payload_pre(file_n_gram,arg_val_set,batch):
+    pay_exr_fe = []
     for i in range(len(arg_val_set)//batch):
-        v_data = arg_val_set[i * batch: (i+1)*batch]
-        
+        v_data = " ".join(arg_val_set[i * batch: (i+1)*batch]).split()
+        per_max_pay_l = max([len(e) for e in v_data])
+        avg_pay_l = np.mean([len(e) for e in v_data])
+        num_pay = len(v_data)
+        re_ratio = len(set(v_data)) / num_pay
+        pay_exr_fe.append([per_max_pay_l,avg_pay_l,num_pay,re_ratio])
+
     with open(file_n_gram,'r',encoding="utf-8") as fp:
         lines = fp.readlines()
         model = doc2vec_g([line.strip() for line in lines])
-        pdb.set_trace()
 
+# 提取额外特征
+def extra_feature(arg_name_set,end_path_set,arg_val_set,batch):
+    pay_ext_fe = []
+    for i in range(len(arg_val_set)//batch):
 
+        # 最大频率参数比例
+        n_data = " ".join(arg_name_set[i*batch:(i+1)*batch]).split()
+        arg_counter = Counter(n_data)
+        re_ration_name = arg_counter[max(arg_counter,key = arg_counter.get)] / len(n_data)
+
+        # 末端路径重复率
+        p_data = end_path_set[i*batch:(i+1)*batch]
+        s_v_data = set(p_data)
+        re_ration_path = len(p_data) / len(set(p_data))
+
+        v_data = " ".join(arg_val_set[i * batch: (i+1)*batch]).split()    
+        # 单个payload 最长长度
+        per_max_pay_l = max([len(e) for e in v_data])
+        # payload 长度均值
+        avg_pay_l = np.mean([len(e) for e in v_data])
+        # payload 长度方差
+        std_pay_l = np.var([len(e) for e in v_data])
+        # payload 重复率
+        num_pay = len(v_data)
+        
+        re_ratio_pay = num_pay / len(set(v_data)) 
+        v_s_data = " ".join(v_data)
+        # 空格个数
+        num_space = v_s_data.count("#")
+        # 特殊字符：/@()%$-<>?
+        num_ss = sum([v_s_data.count(i) for i in "/@()%$-<>?"])
+        # 不可打印字符
+        num_not_print = len([i for i in v_s_data if i not in string.printable])
+        # 最大频率参数比例，末端路径重复率，单个payload最大长度，payload平均长度，payload长度方差，payload数量，payload重复率，空格个数，特殊字符数量，不可打印字符数量
+        pay_ext_fe.append([re_ration_name,re_ration_path,per_max_pay_l,avg_pay_l,std_pay_l,num_pay,re_ratio_pay,num_space,num_ss,num_not_print])
 
 
 
@@ -191,8 +232,9 @@ if __name__ == "__main__":
 
     # payload 表示模型
     # arg_val_vec = word2vec_g(data = "malicious_detection/data/{n}_gram_data.txt".format(n=n),train_size = 200)
-    file_n_gram = "malicious_detection/data/{n}_gram_data.txt".format(n=n)
-    payload_pre(file_n_gram,arg_val_set,batch)
+    # file_n_gram = "malicious_detection/data/{n}_gram_data.txt".format(n=n)
+    # payload_pre(file_n_gram,arg_val_set,batch)
+    extra_feature(arg_name_set,end_path_set,arg_val_set,batch)
 
     # pdb.set_trace()
     # doc2vec_g(data)
