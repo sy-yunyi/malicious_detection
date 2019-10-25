@@ -80,6 +80,8 @@ def doc2vec_g(data):
 
     model = gensim.models.doc2vec.Doc2Vec(documents=docm,dm=1,vector_size=100,window=8,min_count=5,workers=4)
 
+    return model
+
     # np.savetxt('D:\six\code\malicious_detection\data\d2v.txt',model.docvecs)
     #单词向量 ： model.wv.vectors; 单词：model.wv.vocab
     #句子向量 ：model.docvecs.vectors_docs
@@ -105,8 +107,8 @@ def one_hot(end_path_set,arg_name_set):
     return end_path_enc,arg_name_enc
 
 # 行为分析模型数据向量化
-def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec):
-    batch = 50
+def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec,batch=50):
+    # batch = 50
     be_vec = []
     for i in range(len(data_set)//batch):
         b_i = []
@@ -118,20 +120,37 @@ def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec):
             arg_ns = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 == 0]
             arg_vs = [eb[2:][i] for i in range(len(eb[2:])) if i % 2 != 0]
             for i in range(len(arg_ns)):
+                # 这里是one-hot,如果采用词袋，则将这里的值相加
                 b_i.extend(arg_name_enc.transform([[arg_ns[i]]]).toarray()[0])
                 b_i.extend(arg_val_vec[arg_vs[i]].tolist())
             # print(b_i)
         be_vec.append(b_i)
     return be_vec
-            # pdb.set_trace()
 
 
-
-
+def n_gram_pay(data,batch=50,n=2):
+    n_gram_data = []
+    for i in range(len(data)//batch):
+        p_data = " ".join(data[i*batch:(i+1)*batch])
+        n_gram_data.append(" ".join([p_data[j:j+n] for j in range(len(p_data)-(n+1))]))
     
 
+    # 输出文件
+    # with open("malicious_detection/data/{n}_gram_data.txt".format(n=n),"w",encoding='utf-8') as fp:
+    #     fp.write("\n".join(n_gram_data))
 
-                    
+
+def payload_pre(file_n_gram,arg_val_set,batch):
+    for i in range(len(arg_val_set)//batch):
+        v_data = arg_val_set[i * batch: (i+1)*batch]
+        
+    with open(file_n_gram,'r',encoding="utf-8") as fp:
+        lines = fp.readlines()
+        model = doc2vec_g([line.strip() for line in lines])
+        pdb.set_trace()
+
+
+
 
 
 
@@ -158,10 +177,22 @@ if __name__ == "__main__":
     # 行为分析模型
     # 末端路径，参数名，payload，payload 最长长度
     file_path = r"D:\six\code\malicious_detection\data\data_normalTrafficTest"
+    batch = 50
+    n = 3
     data_set,end_path_set,arg_name_set,arg_val_set = data2sen(file_path)
-    end_path_enc,arg_name_enc = one_hot(end_path_set,arg_name_set)
-    arg_val_vec = word2vec_g(data = "malicious_detection/data/arg_val.txt",train_size = 200)
-    beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec)
+
+    # 行为语义学习模型
+    # end_path_enc,arg_name_enc = one_hot(end_path_set,arg_name_set)
+    # arg_val_vec = word2vec_g(data = "malicious_detection/data/arg_val.txt",train_size = 200)
+    # beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec,batch)
+
+    # 对payload进行n-gram划分，得到划分文件
+    # n_gram_pay(arg_val_set,batch,n=2)
+
+    # payload 表示模型
+    # arg_val_vec = word2vec_g(data = "malicious_detection/data/{n}_gram_data.txt".format(n=n),train_size = 200)
+    file_n_gram = "malicious_detection/data/{n}_gram_data.txt".format(n=n)
+    payload_pre(file_n_gram,arg_val_set,batch)
 
     # pdb.set_trace()
     # doc2vec_g(data)
