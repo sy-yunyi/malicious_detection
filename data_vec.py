@@ -11,6 +11,7 @@ from gensim.test.utils import common_texts
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from collections import Counter
 import string
+from urllib.parse import unquote
 from sklearn.externals import joblib
 def dataExtract(file_path,out_path):
     header = ["User-Agent:","Pragma:","Cache-control:","Accept:","Accept-Encoding:","Accept-Charset:","Accept-Language:","Host:","Cookie:","Connection:","Content-Length:","Content-Type:","Set-cookie"]
@@ -66,9 +67,15 @@ def data2sen(file_path):
                 else:
                     args = d[1].split("?")[-1].replace("+","#")
                     args_sp = re.split("[=&]",args)
-                    data_set.append(urllib.parse.unquote(" ".join([act,end_p," ".join(args_sp)])))
-                    arg_name_set.append(urllib.parse.unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 ==0])))
-                    arg_val_set.append(urllib.parse.unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 !=0])))
+                    data_set.append(unquote(" ".join([act,end_p," ".join(args_sp)])))
+                    ns = unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 ==0]))
+                    ns = ns.replace("%0A","")
+                    ns = ns.replace("%0D","")
+                    arg_name_set.append(ns)
+                    vals = unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 !=0]))
+                    vals = vals.replace("%0A","")
+                    vals = vals.replace("%0D","")
+                    arg_val_set.append(unquote(vals))
 
                 # data_set.append(" ".join([d[0]," ".join(re.split("[?=&]",d[1].split("/")[-1]))]))
 
@@ -81,11 +88,15 @@ def data2sen(file_path):
                 args = data_g.__next__().strip().replace("+","#")
                 
                 args_sp = re.split("[=&]",args)
+                ns = unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 ==0]))
+                ns = ns.replace("%0A","").replace("%0D","")
+                arg_name_set.append(ns)
+                vals = unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 !=0]))
+                vals = vals.replace("%0A","").replace("%0D","")
+                arg_val_set.append(unquote(vals))
 
-                arg_name_set.append(urllib.parse.unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 ==0])))
-                arg_val_set.append(urllib.parse.unquote(" ".join([a for i, a in enumerate(args_sp) if i % 2 !=0])))
+                data_set.append(unquote(" ".join([ac_end[0],ac_end[-3]," ".join(re.split("[=&]",args))])))
 
-                data_set.append(urllib.parse.unquote(" ".join([ac_end[0],ac_end[-3]," ".join(re.split("[=&]",args))])))
     return data_set,end_path_set,arg_name_set,arg_val_set
         
 
@@ -109,10 +120,10 @@ def doc2vec_g(data):
     
 def golvec_tf(data):
     print("训练模型...")
-    model = tf_glove.GloVeModel(embedding_size=50, context_size=10, min_occurrences=25,learning_rate=0.05, batch_size=512)
+    model = tf_glove.GloVeModel(embedding_size=20, context_size=10, min_occurrences=25,learning_rate=0.05, batch_size=512)
     model.fit_to_corpus([words.split() for words in data])
     model.train(num_epochs=50, log_dir="malicious_detection/log/example", summary_batch_interval=1000)
-    pdb.set_trace()
+    return model
     
 
 # 对末端路径和参数名进行one-hot编码
@@ -155,33 +166,66 @@ def beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec,batch=50):
 def n_gram_pay(data,batch=50,n=2):
     n_gram_data = []
     for i in range(len(data)//batch):
-        p_data = " ".join(data[i*batch:(i+1)*batch])
+        p_data = urllib.parse.unquote(" ".join(data[i*batch:(i+1)*batch]))
         n_gram_data.append(" ".join([p_data[j:j+n] for j in range(len(p_data)-(n+1))]))
     
 
     # 输出文件
-    # with open("malicious_detection/data/{n}_gram_data.txt".format(n=n),"w",encoding='utf-8') as fp:
-    #     fp.write("\n".join(n_gram_data))
+    with open("malicious_detection/data/{n}_gram_data.txt".format(n=n),"w",encoding='utf-8') as fp:
+        fp.write("\n".join(n_gram_data))
 
 
 def payload_pre(file_n_gram,arg_val_set,batch):
-    pay_exr_fe = []
-    for i in range(len(arg_val_set)//batch):
-        v_data = " ".join(arg_val_set[i * batch: (i+1)*batch]).split()
-        per_max_pay_l = max([len(e) for e in v_data])
-        avg_pay_l = np.mean([len(e) for e in v_data])
-        num_pay = len(v_data)
-        re_ratio = len(set(v_data)) / num_pay
-        pay_exr_fe.append([per_max_pay_l,avg_pay_l,num_pay,re_ratio])
+    # arg_val_vec = word2vec_g(data = file_n_gram,train_size = 20)
 
     with open(file_n_gram,'r',encoding="utf-8") as fp:
         lines = fp.readlines()
         model = doc2vec_g([line.strip() for line in lines])
+        # model.save("malicious_detection/models/doc2vec_model.model")
+        g_model = golvec_tf(lines)
+        # g_model.save("malicious/models/glove_model.model")
+        
+        pay_exr_fe = []
+        for i in range(len(arg_val_set)//batch):
+            v_data = " ".join(arg_val_set[i * batch: (i+1)*batch]).split()
+            per_max_pay_l = max([len(e) for e in v_data])
+            avg_pay_l = np.mean([len(e) for e in v_data])
+            num_pay = len(v_data)
+            re_ratio = len(set(v_data)) / num_pay
+            pay_vec = []
+            for k in lines[i].split():
+                try:
+                    # 如果出现不在单词表中的，则跳过
+                    # doc2vec
+                    # pay_vec.extend(model.wv[k])
+                    # golvec
+                    if len(k) > 1:
+                        # pdb.set_trace()
+                        pay_vec.extend(g_model.embedding_for(k).tolist())
+                        # pay_vec.extend(arg_val_vec[k].tolist())
+                except:
+                    pass
+            # pay_vec = [model.wv[k] for k in lines[i].split()]
+            # pdb.set_trace()
+            # 特征向量
+            per_pay = [per_max_pay_l,avg_pay_l,num_pay,re_ratio]
+            # 句子向量
+            per_pay.extend(model.docvecs[i])
+            # pdb.set_trace()
+            # 单词向量
+            per_pay.extend(pay_vec)
+
+            pay_exr_fe.append(per_pay)
+    np.save("pay_pre_doc2vec_glove",pay_exr_fe)
+    # pdb.set_trace()
+            
+
+    
 
 # 提取额外特征
 def extra_feature(arg_name_set,end_path_set,arg_val_set,batch):
 
-    # %3A 换行符
+    # %0A 换行符
     # 还需要再进行解码
     pay_ext_fe = []
     for i in range(len(arg_val_set)//batch):
@@ -215,16 +259,17 @@ def extra_feature(arg_name_set,end_path_set,arg_val_set,batch):
         num_not_print = len([i for i in v_s_data if i not in string.printable])
         # 最大频率参数比例，末端路径重复率，单个payload最大长度，payload平均长度，payload长度方差，payload数量，payload重复率，空格个数，特殊字符数量，不可打印字符数量
         pay_ext_fe.append([re_ration_name,re_ration_path,per_max_pay_l,avg_pay_l,std_pay_l,num_pay,re_ratio_pay,num_space,num_ss,num_not_print])
-
+    np.save("pay_ext_f",pay_ext_fe)
+    return pay_ext_fe
 
 if __name__ == "__main__":
     # 将目标数据才从源数据中提取出来
     # file_path = r"F:\广电\source\detection_web_attack\data\normalTrafficTest.txt"
     # out_path = r"malicious_detection\data\data_normalTrafficTest"
 
-    file_path = r"F:\广电\source\detection_web_attack\data\anomalousTrafficTest.txt"
-    out_path = r"malicious_detection\data\data_anomalousTrafficTest"
-    dataExtract(file_path,out_path)
+    # file_path = r"F:\广电\source\detection_web_attack\data\anomalousTrafficTest.txt"
+    # out_path = r"malicious_detection\data\data_anomalousTrafficTest"
+    # dataExtract(file_path,out_path)
 
     #数据向量化
     # 1.数据提取
@@ -268,31 +313,31 @@ if __name__ == "__main__":
 
     batch = 10
     n = 3
-    data_vec = []
     data_set,end_path_set,arg_name_set,arg_val_set,labels = data2sen_e(file_paths,batch)
-    np.save("labels",labels)
+
+    # np.save("labels",labels)
 #     data_set,end_path_set,arg_name_set,arg_val_set = data2sen(file_paths[i])
 #     # 行为语义学习模型
-    arg_name_enc = one_hot(end_path_set,arg_name_set)
-    arg_val_vec = word2vec_g(data = "malicious_detection/data/arg_val_all.txt",train_size = 100)
-    end_path_enc = word2vec_g(data = "malicious_detection/data/end_path_all.txt",train_size = 20)
-    bv = beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec,batch)
-    np.save("beh_vec_v100",bv,allow_pickle=True)
+    # arg_name_enc = one_hot(end_path_set,arg_name_set)
+    # arg_val_vec = word2vec_g(data = "malicious_detection/data/arg_val_all.txt",train_size = 100)
+    # end_path_enc = word2vec_g(data = "malicious_detection/data/end_path_all.txt",train_size = 20)
+    # bv = beh_vec(data_set,end_path_enc,arg_name_enc,arg_val_vec,batch)
+    # np.save("beh_vec_v100",bv,allow_pickle=True)
     # joblib.dump(bv, "beh_vec.pkl")
-    pdb.set_trace()
+
     
 
 
     # 对payload进行n-gram划分，得到划分文件
-    # n_gram_pay(arg_val_set,batch,n=2)
+    # n_gram_pay(arg_val_set,batch,n)
 
     # payload 表示模型
     # arg_val_vec = word2vec_g(data = "malicious_detection/data/{n}_gram_data.txt".format(n=n),train_size = 200)
-    # file_n_gram = "malicious_detection/data/{n}_gram_data.txt".format(n=n)
+    file_n_gram = "malicious_detection/data/{n}_gram_data.txt".format(n=n)
 
     # payload_pre(file_n_gram,arg_val_set,batch)
 
-    # extra_feature(arg_name_set,end_path_set,arg_val_set,batch)
+    extra_feature(arg_name_set,end_path_set,arg_val_set,batch)
 
     # pdb.set_trace()
     # doc2vec_g(data)
