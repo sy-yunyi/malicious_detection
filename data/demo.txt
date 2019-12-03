@@ -1,0 +1,60 @@
+GET index.jsp
+GET anadir.jsp id 1 nombre Jam�n#Ib�rico precio 39 cantidad 41 B1 A�adir#al#carrito
+POST anadir.jsp id 1 nombre Jam�n#Ib�rico precio 39 cantidad 41 B1 A�adir#al#carrito
+GET autenticar.jsp modo entrar login caria pwd egipciaca remember off B1 Entrar
+POST autenticar.jsp modo entrar login caria pwd egipciaca remember off B1 Entrar
+GET caracteristicas.jsp id 2
+POST caracteristicas.jsp id 2
+GET carrito.jsp
+GET entrar.jsp errorMsg Credenciales#incorrectas
+POST entrar.jsp errorMsg Credenciales#incorrectas
+GET miembros.jsp
+GET pagar.jsp modo insertar precio 3230 B1 Pasar#por#caja
+POST pagar.jsp modo insertar precio 3230 B1 Pasar#por#caja
+GET productos.jsp
+GET registro.jsp modo registro login minthorn password ahorquillado nombre Isra�l apellidos Luna#Barberan email pouyet@mcrspain.mh dni 83073375C direccion Calle#Pamplona,#26# ciudad Arrankudiaga cp 49740 provincia Huesca ntc 2656905158370014 B1 Registrar
+POST registro.jsp modo registro login minthorn password ahorquillado nombre Isra�l apellidos Luna#Barberan email pouyet@mcrspain.mh dni 83073375C direccion Calle#Pamplona,#26# ciudad Arrankudiaga cp 49740 provincia Huesca ntc 2656905158370014 B1 Registrar
+GET vaciar.jsp B2 Vaciar#carrito
+POST vaciar.jsp B2 Vaciar#carrito
+GET creditos.jsp
+GET menum.jsp
+GET titulo.jsp
+GET estilos.css
+GET castro.jpg
+GET ogono.jpg
+GET zarauz.jpg
+GET index.jsp
+GET editar.jsp modo registro login nataraja password d4upa nombre Zoraida apellidos Heras#Del#Moral email lowry-carmine@filtraciondehumos.nc dni 69549902H direccion C/#Albercuix,#27,# ciudad �greda cp 50369 provincia Ourense ntc 0017018534732457 B1 Registrar
+POST editar.jsp modo registro login nataraja password d4upa nombre Zoraida apellidos Heras#Del#Moral email lowry-carmine@filtraciondehumos.nc dni 69549902H direccion C/#Albercuix,#27,# ciudad �greda cp 50369 provincia Ourense ntc 0017018534732457 B1 Registrar
+GET fotos.jsp
+GET salir.jsp
+GET 1.gif
+GET 2.gif
+GET 3.gif
+GET cmenbul.gif
+GET logo.gif
+GET nuestratierra.jpg
+GET index.jsp
+GET anadir.jsp id 1 nombre Queso#Manchego precio 85 cantidad 65 B1 A�adir#al#carrito
+POST anadir.jsp id 1 nombre Queso#Manchego precio 85 cantidad 65 B1 A�adir#al#carrito
+GET autenticar.jsp modo entrar login frayda pwd 422RdO remember off B1 Entrar
+POST autenticar.jsp modo entrar login frayda pwd 422RdO remember off B1 Entrar
+GET caracteristicas.jsp id 1
+POST caracteristicas.jsp id 1
+GET carrito.jsp
+GET entrar.jsp errorMsg Credenciales#incorrectas
+POST entrar.jsp errorMsg Credenciales#incorrectas
+GET miembros.jsp
+GET pagar.jsp modo insertar precio 9894 B1 Confirmar
+POST pagar.jsp modo insertar precio 9894 B1 Confirmar
+GET productos.jsp
+GET registro.jsp modo registro login neddie password laNC00DA nombre Sami apellidos Buxedas#Murcia email aicher@shamballa-pneuma.gl dni 47433551F direccion Calle#Mor#Artur#68# ciudad Pozoblanco cp 08585 provincia Huesca ntc 9664721981046844 B1 Registrar
+POST registro.jsp modo registro login neddie password laNC00DA nombre Sami apellidos Buxedas#Murcia email aicher@shamballa-pneuma.gl dni 47433551F direccion Calle#Mor#Artur#68# ciudad Pozoblanco cp 08585 provincia Huesca ntc 9664721981046844 B1 Registrar
+GET vaciar.jsp B2 Vaciar#carrito
+POST vaciar.jsp B2 Vaciar#carrito
+GET creditos.jsp
+GET menum.jsp
+GET titulo.jsp
+GET estilos.css
+GET castro.jpg
+GET ogono.jpg

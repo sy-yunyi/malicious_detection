@@ -107,10 +107,11 @@ def word2vec_g(data,train_size):
 
 def doc2vec_g(data):
     print("训练模型...")
-    # mords为分割后的单词列表
-    docm = [gensim.models.doc2vec.TaggedDocument(words = words.split(),tags = [i]) for i,words in enumerate(data)]
+    # words为分割后的单词列表
+    docm = [gensim.models.doc2vec.TaggedDocument(words = words,tags = [i]) for i,words in enumerate(data)]
+    # docm = [gensim.models.doc2vec.TaggedDocument(words = words.split(),tags = [i]) for i,words in enumerate(data)]
 
-    model = gensim.models.doc2vec.Doc2Vec(documents=docm,dm=1,vector_size=100,window=8,min_count=5,workers=4)
+    model = gensim.models.doc2vec.Doc2Vec(documents=docm,dm=1,vector_size=100,window=8,min_count=1,workers=4)
 
     return model
 
