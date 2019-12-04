@@ -22,14 +22,15 @@ def beh_LSTM(input_dim,X_train=None, X_test=None, y_train=None, y_test=None,data
     # data = data.reshape((data.shape[0],2,input_dim))
     model = keras.models.Sequential()
     model.add(keras.layers.Masking(mask_value=-100))
-    pdb.set_trace()
-    model.add(keras.layers.LSTM(256,dropout_W=0.2, dropout_U=0.2, input_shape=(data.shape[0],st,input_dim)))
+    # pdb.set_trace()
+    model.add(keras.layers.LSTM(256,dropout_W=0.2, dropout_U=0.2,input_shape=(data.shape[0],st,input_dim)))
+    # ,return_sequences=True
     # model.add(keras.layers.Dropout(0.3))
     # model.add(keras.layers.LSTM(100, dropout_W=0.2, dropout_U=0.2))
-    model.add(keras.layers.Dense(1, activation='relu'))
+    model.add(keras.layers.Dense(1, activation='tanh'))
     model.compile(loss='mean_squared_error', optimizer='adam',metrics=['accuracy'])
     # return model 
-    model.fit(X_train, y_train, epochs=40, batch_size=1024,verbose=1)
+    model.fit(X_train, y_train, epochs=150, batch_size=1024,verbose=1)
     score = model.evaluate(X_test, y_test,batch_size=256, verbose=1)
     
     print(score)
@@ -219,15 +220,26 @@ if __name__ == "__main__":
     # run_pay_xgboost()
 
     # new model
-    data = np.load("data_vec_new.npy",allow_pickle=True)
-    labels = np.load("labels_new.npy",allow_pickle = True)
+    # data = np.load("data_vec_new.npy",allow_pickle=True)
+    # labels = np.load("labels_new.npy",allow_pickle = True)
+    # data = keras.preprocessing.sequence.pad_sequences(data,maxlen=max([len(i) for i in data]),value=1)
+    # # pdb.set_trace()
+    # input_dim = 1680
+    # st = 10
+    # data = data.reshape((data.shape[0],st,input_dim))
+    # X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=0)
+    # # pdb.set_trace()
+    # beh_LSTM(input_dim,X_train, X_test, y_train, y_test,data,st)
+
+    # masq
+    data = np.load("masq_data.npy",allow_pickle=True)
+    labels = np.load("masq_labels.npy",allow_pickle = True)
     data = keras.preprocessing.sequence.pad_sequences(data,maxlen=max([len(i) for i in data]),value=1)
     # pdb.set_trace()
-    input_dim = 1680
-    st = 10
+    input_dim = 100
+    st = 100
     data = data.reshape((data.shape[0],st,input_dim))
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=0)
-    pdb.set_trace()
+    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.4, random_state=0)
+    # pdb.set_trace()
     beh_LSTM(input_dim,X_train, X_test, y_train, y_test,data,st)
-
 
