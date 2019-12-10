@@ -8,6 +8,8 @@ import keras
 from models import beh_LSTM
 from sklearn.model_selection import train_test_split
 
+from masqierade_static import sequenceStatis
+
 
 def load_file(file_path,label_path):
 
@@ -59,6 +61,11 @@ if __name__ == "__main__":
     file_path = "D:\six\code\masquerade-data\*"
     label_path = "D:\six\code\masquerade_summary.txt"
     data,train_data,test_data,labels = load_file(file_path,label_path)
+    sequenceStatis(data,True)
+    pdb.set_trace()
+
+
+
     data = np.array(data).reshape((7500,100))
     model = doc2vec_g(data)
     # train data
