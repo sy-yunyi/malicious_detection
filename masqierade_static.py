@@ -1,6 +1,7 @@
 import numpy as np 
 import json
-
+import pdb
+from collections import Counter as cc
 
 def sequenceStatis(data,trim=False):
     data = np.array(data).reshape(7500,100)
@@ -30,3 +31,37 @@ def sequenceStatis(data,trim=False):
         json.dump(shell_dict_all,fp)
 
 
+def analyze_masq():
+    file_path = "masq_statis_next.json"
+    with open(file_path,'r') as fp:
+        data = json.load(fp)
+    shell=[]
+    shell_user=[]
+    for key in data.keys():
+        if type(data[key])!=dict:
+            shell.append(key)
+        else:
+            shell_user.append(data[key])
+    shell_dict = {}
+    for sh in shell:
+        shell_dict[sh]=cc(data[sh])
+    user_squence = []
+    for shu in shell_user:  # get user information
+        suser = []
+        for sk in shu.keys():
+            suc = cc(shu[sk])
+            s_prb = " "
+            for sp in suc.keys():
+                cre_prb = (suc[sp]/sum(suc.values()))*(shell_dict[sk][sp]/sum(shell_dict[sk].values()))
+                s_prb = s_prb+str(cre_prb)+" "
+            suser.append([sk,s_prb])
+        user_squence.append(suser)
+    np.save("masq_statis_next_prb",user_squence)
+            
+
+
+        
+    pdb.set_trace()
+
+if __name__ == "__main__":
+    analyze_masq()

@@ -61,7 +61,7 @@ if __name__ == "__main__":
     file_path = "D:\six\code\masquerade-data\*"
     label_path = "D:\six\code\masquerade_summary.txt"
     data,train_data,test_data,labels = load_file(file_path,label_path)
-    sequenceStatis(data,True)
+    # sequenceStatis(data,True)
     pdb.set_trace()
 
 
