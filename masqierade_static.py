@@ -56,12 +56,40 @@ def analyze_masq():
                 s_prb = s_prb+str(cre_prb)+" "
             suser.append([sk,s_prb])
         user_squence.append(suser)
-    np.save("masq_statis_next_prb",user_squence)
+    # np.save("masq_statis_next_prb",user_squence)
             
 
+def analyze_masq_double():
+    file_path = "masq_statis_double.json"
+    with open(file_path,'r') as fp:
+        data = json.load(fp)
+    shell=[]
+    shell_user=[]
+    for key in data.keys():
+        if type(data[key])!=dict:
+            shell.append(key)
+        else:
+            shell_user.append(data[key])
+    shell_dict = {}
+    for k in shell:
+        shell_dict[k]=cc(["".join(dk) for dk in data[k]])
+    user_squence = []
+    for shu in shell_user:
+        suser = []
+        for sk in shu.keys():
+            suc = cc(["".join(sku) for sku in shu[sk]])
+            s_prb = " "
+            for sp in suc.keys():
+                cre_prb = (suc[sp]/sum(suc.values()))*(shell_dict[sk][sp]/sum(shell_dict[sk].values()))
+                s_prb = s_prb+str(cre_prb)+" "
+            suser.append([sk,s_prb])
+        user_squence.append(suser)
+    np.save("masq_statis_double_prb",user_squence)
 
-        
     pdb.set_trace()
 
+
+
+
 if __name__ == "__main__":
-    analyze_masq()
+    analyze_masq_double()
