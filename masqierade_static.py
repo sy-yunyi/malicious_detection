@@ -86,10 +86,35 @@ def analyze_masq_double():
         user_squence.append(suser)
     np.save("masq_statis_double_prb",user_squence)
 
+def combained_(data):
+    data_next = np.load("masq_statis_next_prb.npy",allow_pickle=True)
+    data = np.array(data).reshape(7500,100)
+    data1 = np.load("masq_data.npy",allow_pickle=True)
+    next_fea = []
+    for di in data_next:
+        di_f = []
+        for dj in np.array(di)[:,1]:
+            di_f.extend(dj.split())
+        next_fea.append(np.array(di_f).astype("float32"))
+    
+    data_double = np.load("masq_statis_double_prb.npy",allow_pickle=True)
+    double_fea = []
+    for di in data_double:
+        di_f = []
+        for dj in np.array(di)[:,1]:
+            di_f.extend(dj.split())
+        double_fea.append(np.array(di_f).astype("float32"))
+    dn_fea = [np.hstack((di,dj)) for di,dj in zip(next_fea,double_fea)]
+    np.save("masq_data_statis_only",dn_fea)
+
+    # com_fea = [np.hstack((di,dj)) for di,dj in zip(data1,dn_fea)]
+
+    # np.save("masq_data_statis",com_fea)
     pdb.set_trace()
 
 
 
-
 if __name__ == "__main__":
-    analyze_masq_double()
+    # analyze_masq_double()
+    pass
+    

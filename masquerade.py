@@ -8,7 +8,7 @@ import keras
 from models import beh_LSTM
 from sklearn.model_selection import train_test_split
 
-from masqierade_static import sequenceStatis
+from masqierade_static import sequenceStatis,combained_
 
 
 def load_file(file_path,label_path):
@@ -34,6 +34,12 @@ def load_file(file_path,label_path):
 def data2vec(model,data,shape):
     print("data2vec....")
     datavec = []
+    tmp = []
+
+    for d in range(len(model.docvecs)):
+        tmp.append(model.docvecs[d])
+    np.save("masq_squence",tmp)
+    pdb.set_trace()
     for d in data:
         datavec.extend(model[d].tolist())
     return np.array(datavec).reshape(shape)
@@ -62,9 +68,8 @@ if __name__ == "__main__":
     label_path = "D:\six\code\masquerade_summary.txt"
     data,train_data,test_data,labels = load_file(file_path,label_path)
     # sequenceStatis(data,True)
-    pdb.set_trace()
-
-
+    # combained_(data)
+    # pdb.set_trace()
 
     data = np.array(data).reshape((7500,100))
     model = doc2vec_g(data)
@@ -81,8 +86,8 @@ if __name__ == "__main__":
 
     labels = np.hstack((train_labels,labels))
 
-    np.save("masq_data",data)
-    np.save("masq_labels",labels)
+    # np.save("masq_data",data)
+    # np.save("masq_labels",labels)
     # pdb.set_trace()
     # X_train, X_test, y_train, y_test = train_test_split(data, labels.T, test_size=0.2, random_state=0)
 
