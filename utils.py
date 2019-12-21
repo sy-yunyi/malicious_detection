@@ -9,7 +9,8 @@ def groupBy(data=None,window=5,step=1):
         gd = data[i:(i+window)]
         i = i + step
         try:
-            data_group.append(list(itertools.chain(*gd)))
+            data_group.append(gd)
+            # data_group.append(list(itertools.chain(*gd)))
         except:
             data_group.append(gd)
     return data_group

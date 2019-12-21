@@ -2,10 +2,10 @@ from __future__ import division
 from collections import Counter, defaultdict
 import os
 from random import shuffle
-# import tensorflow as tf
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
+# import tensorflow.compat.v1 as tf
 
-tf.disable_v2_behavior()
+# tf.disable_v2_behavior()
 
 
 class NotTrainedError(Exception):
