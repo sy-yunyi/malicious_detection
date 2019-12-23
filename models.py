@@ -322,7 +322,7 @@ if __name__ == "__main__":
     next_g_data = beh_LSTM(input_dim,X_train, X_test, y_train, y_test,data,st)
 
     data = np.load("adfa_data_type_50_vec.npy",allow_pickle=True)
-    # labels = np.load("adfa_labels_type.npy",allow_pickle = True)
+    labels = np.load("adfa_labels_type.npy",allow_pickle = True)
     data = np.array([d.astype("float32") for d in data])
     data = keras.preprocessing.sequence.pad_sequences(data,maxlen=max([len(i) for i in data]),value=-1.0)
     # pdb.set_trace()

@@ -64,8 +64,8 @@ def my_LSTM(X_train=None, X_test=None, y_train=None, y_test=None):
     print(score)
 
 if __name__ == "__main__":
-    file_path = "D:\six\code\masquerade-data\*"
-    label_path = "D:\six\code\masquerade_summary.txt"
+    file_path = ".\masquerade-data\*"
+    label_path = ".\masquerade_summary.txt"
     data,train_data,test_data,labels = load_file(file_path,label_path)
     # sequenceStatis(data,True)
     # combained_(data)
