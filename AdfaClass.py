@@ -43,6 +43,8 @@ class ADFA:
                 for ty in attack_tyep.keys():
                     if ty in file:
                         data,lb = self.load_type_file(file,window,step)
+                        if data ==[]:
+                            continue
                         x.append(data) if type(data[0]) !=list else x.extend(data)
                         if ty == "Meter" and "Java_Meter" in file:
                             ty= "Java_Meter"
@@ -51,14 +53,18 @@ class ADFA:
             else:
                 if "Attack" not in file:
                     data,lb = self.load_type_file(file,window,step)
+                    if data ==[]:
+                        continue
                     x.append(data) if type(data[0]) !=list else x.extend(data)
                     y.extend([0] * lb)
                 else:
                     data,lb = self.load_type_file(file,window,step)
+                    if data ==[]:
+                        continue
                     x.append(data) if type(data[0]) !=list else x.extend(data)
                     y.extend([1] * lb)
         return x, y
-    def train_model(self,data,labels,input_dim,st,iss_dim=1,model_type="SEN"):
+    def train_model(self,data,labels,input_dim=None,st=None,iss_dim=1,model_type="SEN"):
         """
         模型训练
         data，为全部数据，格式为二维数组
@@ -68,7 +74,8 @@ class ADFA:
         iss_dim 问题维度，多分类或者二分类
         model_type:语义模型，序列模型
         """
-        data = data.reshape((data.shape[0],st,input_dim))
+        if input_dim:
+            data = data.reshape((data.shape[0],st,input_dim))
         if iss_dim!=1:
                 enc = OneHotEncoder()
                 labels = np.array(labels).reshape(len(labels),-1)
@@ -76,7 +83,7 @@ class ADFA:
                 labels = enc.transform(labels).toarray()
         X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.25, random_state=0)
         if model_type=="SEN":
-            model = detectModel.SemanticModel(X_train,y_train,data,input_dim,st,iss_dim=iss_dim,act="tanh")
+            model = detectModel.SemanticModel(X_train,y_train,X_test,y_test,data,input_dim,st,iss_dim=iss_dim,act="tanh")
             model_pre = model.predict_proba(data)
             score = model.evaluate(X_test, y_test,batch_size=256, verbose=1)
             print(score)
@@ -89,16 +96,13 @@ class ADFA:
             print(metrics.confusion_matrix(y_test,pre_c.reshape((pre_c.shape[0]))))
 
         elif model_type=="SQU":
-            model = detectModel.SemanticModel(X_train,y_train,data,input_dim,st,iss_dim=iss_dim,act="tanh")
+            model = detectModel.pay_xgboost(X_train,y_train,iss_dim)
             model_pre = model.predict_proba(data)
-            print(model.evaluate(X_test, y_test,batch_size=256, verbose=1))
-            pre_c = model.predict_classes(X_test)
-            # 二分类问题
-            # y_test = y_test.astype("int32")
-            # 多分类问题
-            # y_test = y_test.argmax(axis=1)
-            y_test = y_test.astype("int32") if iss_dim==1 else y_test.argmax(axis=1)
-            print(metrics.confusion_matrix(y_test,pre_c.reshape((pre_c.shape[0]))))
+            pre_c = model.predict_proba(X_test).argmax(axis=1).reshape((-1,1))
+            print("auc score :"+str(metrics.roc_auc_score(y_test, pre_c)))
+            # y_test = y_test.argmax(axis=1).reshape((-1,1))
+            # print(metrics.confusion_matrix(y_test,pre_c))
+
         return model,model_pre
 
 
@@ -106,13 +110,16 @@ class ADFA:
 
 if __name__ == "__main__":
     adfa = ADFA()
-    attack_tyep = {"Adduser":1,"Hydra_FTP":2,"Hydra_SSH":2,"Java_Meter":1,"Meter":1,"Web":1}
-    file_path = r"K:\Guang\code\Attack_Data_Master\*\*"
+    attack_tyep = {"Adduser":1,"Hydra_FTP":2,"Hydra_SSH":2,"Java_Meter":4,"Meter":1,"Web":3}
+    file_path = r".\Attack_Data_Master\*\*"
+
+    window=100
+    step=100
+
+    attack_data,attack_y = adfa.load_adfa_type_files(file_path,window=window,step=step,att_type=attack_tyep)
     
-    attack_data,attack_y = adfa.load_adfa_type_files(file_path,window=50,step=50,att_type=attack_tyep)
-    
-    file_path = r"K:\Guang\code\Training_Data_Master\*"
-    train_data,train_y = adfa.load_adfa_type_files(file_path,window=50,step=50)
+    file_path = r".\Training_Data_Master\*"
+    train_data,train_y = adfa.load_adfa_type_files(file_path,window=window,step=step)
     x = train_data + attack_data
     labels = np.array(train_y+attack_y)
     # pdb.set_trace()
@@ -125,13 +132,21 @@ if __name__ == "__main__":
 
     _,data_vec = data2vec(x,type="doc2vec")
     
-    input_dim = 2146
+    input_dim = data_next.shape[1]
     st = 1
-    _,squ_model = adfa.train_model(data_next,labels,input_dim,st,iss_dim=3,model_type="SQU")
+    iss_dim = 5
+    _,squ_model = adfa.train_model(data_next,labels,iss_dim=iss_dim,model_type="SQU")
+    _,squ_model1 = adfa.train_model(data_next,labels,input_dim=input_dim,st=st,iss_dim=iss_dim)
     # data_vec = np.hstack((data_vec,data_next))
-    input_dim = 2500
+    input_dim = data_vec.shape[1]//2
+    # input_dim = 3573
     st = 2
-    _,sen_model = adfa.train_model(data_vec,labels,input_dim=input_dim,st=st,iss_dim=3)
+    _,sen_model = adfa.train_model(data_vec,labels,input_dim=input_dim,st=st,iss_dim=iss_dim)
+
+    detectModel.EmbedingModel(labels,iss_dim=iss_dim,squ_model=squ_model,sen_model=sen_model)
+    detectModel.EmbedingModel(labels,iss_dim=iss_dim,squ_model=squ_model,squ_model1=squ_model1)
+
+    detectModel.EmbedingModel(labels,iss_dim=iss_dim,squ_model=squ_model,sen_model=sen_model,squ_model1=squ_model1)
 
     
     
@@ -169,4 +184,3 @@ if __name__ == "__main__":
 
     # squ_model = model.predict_proba(data)
 
-    detectModel.EmbedingModel(labels,iss_dim=7,squ_model=squ_model,sen_model=sen_model)

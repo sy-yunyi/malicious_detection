@@ -1,3 +1,11 @@
+'''
+@Descripttion: 
+@version: 
+@Author: Six
+@Date: 2019-12-27 15:17:54
+@LastEditors: Six
+@LastEditTime: 2019-12-27 15:53:04
+'''
 import pdb
 import numpy as np
 from glob import glob
@@ -44,7 +52,7 @@ class MASQ:
         data = data.reshape((data.shape[0],st,input_dim))
         X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.25, random_state=0)
         if model_type=="SEN":
-            model = detectModel.SemanticModel(X_train,y_train,data,input_dim,st,iss_dim=iss_dim,act="tanh")
+            model = detectModel.SemanticModel(X_train,y_train,X_test,y_test,data,input_dim,st,iss_dim=iss_dim,act="tanh")
             model_pre = model.predict_proba(data)
             score = model.evaluate(X_test, y_test,batch_size=256, verbose=1)
             print(score)
@@ -53,7 +61,7 @@ class MASQ:
             print(metrics.confusion_matrix(y_test,pre_c.reshape((pre_c.shape[0]))))
             print(classification_report(y_test, pre_c))
         elif model_type=="SQU":
-            model = detectModel.SemanticModel(X_train,y_train,data,input_dim,st,iss_dim=iss_dim,act="tanh")
+            model = detectModel.SemanticModel(X_train,y_train,X_test,y_test,data,input_dim,st,iss_dim=iss_dim,act="tanh")
             model_pre = model.predict_proba(data)
             print(model.evaluate(X_test, y_test,batch_size=256, verbose=1))
             pre_c = model.predict_classes(X_test)

@@ -4,7 +4,7 @@
 @Author: Six
 @Date: 2019-12-23 10:12:10
 @LastEditors  : Six
-@LastEditTime : 2019-12-23 20:27:06
+@LastEditTime : 2019-12-29 17:14:24
 '''
 import pdb
 import re
@@ -14,8 +14,10 @@ from sklearn.model_selection import train_test_split
 import detectModel
 from sklearn import metrics
 from sklearn.metrics.classification import classification_report
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report, confusion_matrix
 import keras
 import numpy as np
+import pandas as pd
 class CSIC:
     def __init__(self):
         super().__init__()
@@ -82,20 +84,24 @@ class CSIC:
             data = data.reshape((data.shape[0],st,input_dim))
         X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.25, random_state=0)
         if model_type=="SEN":
-            model = detectModel.SemanticModel(X_train,y_train,data,input_dim,st,iss_dim=iss_dim,act="relu")
+            model = detectModel.SemanticModel(X_train,y_train,X_test,y_test,data,input_dim,st,iss_dim=iss_dim,act="relu")
             model_pre = model.predict_proba(data)
             score = model.evaluate(X_test, y_test,batch_size=256, verbose=1)
-            print(score)
+            print("score : "+str(score))
             pre_c = model.predict_classes(X_test)
             y_test = y_test.astype("int32")
             print(metrics.confusion_matrix(y_test,pre_c.reshape((pre_c.shape[0]))))
-            print(classification_report(y_test, pre_c))
+            # print(f1_score(y_test, pre_c),precision_score(y_test, pre_c),accuracy_score(y_test, pre_c))
+            # print(classification_report(y_test, pre_c))
+            # Dutils.plot_confusion_matrix(metrics.confusion_matrix(y_test,pre_c),classes=range(2))
+            
         elif model_type=="PAY":
             model = detectModel.pay_xgboost(X_train,y_train)
             model_pre = model.predict_proba(data)
             pre_c = model.predict_proba(X_test).argmax(axis=1)
             print("auc score :"+str(metrics.roc_auc_score(y_test, pre_c)))
-            print(metrics.confusion_matrix(y_test,pre_c))
+            # print(metrics.confusion_matrix(y_test,pre_c))
+            # Dutils.plot_confusion_matrix(metrics.confusion_matrix(y_test,pre_c),classes=range(2))
             
         return model,model_pre
 
@@ -104,14 +110,15 @@ class CSIC:
 
 if __name__ == "__main__":
     csic = CSIC()
-
+    window = 10
+    step = 10
     file_path = "normalTrafficTraining.txt"
     method_list,end_path_list,arg_name_list,arg_val_list = csic.load_file(file_path)
-    data,labels,end_group,arg_name_group,arg_val_group = Dutils.groupBySqu(method_list,end_path_list,arg_name_list,arg_val_list,lable=0,window=10,step=10)
+    data,labels,end_group,arg_name_group,arg_val_group = Dutils.groupBySqu(method_list,end_path_list,arg_name_list,arg_val_list,lable=0,window=window,step=step)
 
     attack_file = "anomalousTrafficTest.txt"
     a_method_list,a_end_path_list,a_arg_name_list,a_arg_val_list = csic.load_file(attack_file)
-    a_data,a_labels,a_end_group,a_arg_name_group,a_arg_val_group = Dutils.groupBySqu(a_method_list,a_end_path_list,a_arg_name_list,a_arg_val_list,lable=1,window=10,step=10)
+    a_data,a_labels,a_end_group,a_arg_name_group,a_arg_val_group = Dutils.groupBySqu(a_method_list,a_end_path_list,a_arg_name_list,a_arg_val_list,lable=1,window=window,step=step)
 
     # 序列特征
     end_group = end_group + a_end_group
@@ -133,10 +140,19 @@ if __name__ == "__main__":
     _,data_vec = Dutils.data2vec(data)
 
     data = keras.preprocessing.sequence.pad_sequences(data_vec,maxlen=max([len(i) for i in data_vec]),value=-10)
-    data = np.hstack((data,exr_fea))
-    input_dim = 12805
+    # data = np.hstack((data,exr_fea))
+    # input_dim = 12805
+    input_dim = 12800
     st = 2
-    _,squ_model = csic.train_model(data,labels,input_dim,st,iss_dim=1,model_type="SEN")
+    detectModel.alg_model(data,labels)
+    squ_model,squ_model_pre = csic.train_model(data,labels,input_dim,st,iss_dim=1,model_type="SEN")
+    # pd.DataFrame(np.array([squ_model.history.history["acc"],squ_model.history.history["val_acc"]]).T,columns=["acc","val_acc"]).to_csv("result/semantic_exr.csv") 
+    Dutils.draw_acc_curve(squ_model)
+    print(squ_model.history.history["val_acc"])
+    # detectModel.EmbedingModel(labels,extra_fea=exr_fea,squ_model=squ_model_pre)
+    # detectModel.EmbedingModel(labels,pay_model = pay_model,squ_model=squ_model_pre)
+    # detectModel.EmbedingModel(labels,extra_fea=exr_fea,pay_model = pay_model,squ_model=squ_model_pre)
 
-    detectModel.EmbedingModel(labels,extra_fea=exr_fea,pay_model = pay_model,squ_model=squ_model)
-    pdb.set_trace()
+    
+
+

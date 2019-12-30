@@ -7,6 +7,7 @@ import pdb
 import numpy as np
 from collections import Counter
 import string
+import matplotlib.pyplot as plt
 def groupBy(data=None,window=5,step=1):
     """
     序列分组
@@ -145,29 +146,94 @@ def extra_squence_feature(arg_name_set,end_path_set,arg_val_set):
 
         # 末端路径重复率
         re_ration_path = len(end_path_set[i]) / len(set(end_path_set[i]))
-  
-        # 单个payload 最长长度
-        per_max_pay_l = max([len(e) for e in arg_val_set[i]])
-        # payload 长度均值
-        avg_pay_l = np.mean([len(e) for e in arg_val_set[i]])
-        # payload 长度方差
-        std_pay_l = np.var([len(e) for e in arg_val_set[i]])
-        # payload 重复率
-        num_pay = len(arg_val_set[i])
-        re_ratio_pay = num_pay / len(set(arg_val_set[i])) 
 
-        v_s_data = " ".join(arg_val_set[i])
-        # 空格个数
-        num_space = v_s_data.count("^")
-        # 特殊字符：/@()%$-<>?
-        num_ss = sum([v_s_data.count(i) for i in "/@()%$-<>?"])
-        # 不可打印字符
-        num_not_print = len([i for i in v_s_data if i not in string.printable])
+        if len(arg_val_set[i])==0:
+            per_max_pay_l = 0
+            # payload 长度均值
+            avg_pay_l = 0
+            # payload 长度方差
+            std_pay_l = 0
+            # payload 重复率
+            re_ratio_pay = 0
+
+            v_s_data = " ".join(arg_val_set[i])
+            # 空格个数
+            num_space = 0
+            # 特殊字符：/@()%$-<>?
+            num_ss = 0
+            # 不可打印字符
+            num_not_print = 0
+        else:
+            # 单个payload 最长长度
+            per_max_pay_l = max([len(e) for e in arg_val_set[i]])
+            # payload 长度均值
+            avg_pay_l = np.mean([len(e) for e in arg_val_set[i]])
+            # payload 长度方差
+            std_pay_l = np.var([len(e) for e in arg_val_set[i]])
+            # payload 重复率
+            num_pay = len(arg_val_set[i])
+            re_ratio_pay = num_pay / len(set(arg_val_set[i])) 
+
+            v_s_data = " ".join(arg_val_set[i])
+            # 空格个数
+            num_space = v_s_data.count("^")
+            # 特殊字符：/@()%$-<>?
+            num_ss = sum([v_s_data.count(i) for i in "/@()%$-<>?"])
+            # 不可打印字符
+            num_not_print = len([i for i in v_s_data if i not in string.printable])
         # 最大频率参数比例，末端路径重复率，单个payload最大长度，payload平均长度，payload长度方差，payload数量，payload重复率，空格个数，特殊字符数量，不可打印字符数量
         pay_ext_fe.append([re_ration_name,re_ration_path,per_max_pay_l,avg_pay_l,std_pay_l,num_pay,re_ratio_pay,num_space,num_ss,num_not_print])
 
     return pay_ext_fe
 
+def draw_acc_curve(data):
+    data=data.history
+    # print(history.history.keys())
+    # Summarize history for accuracy
+    plt.plot(data.history['acc'])
+    plt.plot(data.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left') 
+    plt.show()
+    # Summarize history for loss 
+    plt.plot(data.history['loss']) 
+    plt.plot(data.history['val_loss']) 
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left') 
+    plt.show()
+
+def plot_confusion_matrix(cm, classes,title=None,cmap=plt.cm.Blues):
+        fig, ax = plt.subplots()
+        im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+        ax.figure.colorbar(im, ax=ax)
+        # We want to show all ticks...
+        ax.set(xticks=np.arange(cm.shape[1]),
+            yticks=np.arange(cm.shape[0]),
+            # ... and label them with the respective list entries
+            xticklabels=classes, yticklabels=classes,
+            title=title,
+            ylabel='True label',
+            xlabel='Predicted label')
+
+        # Rotate the tick labels and set their alignment.
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                rotation_mode="anchor")
+
+        # Loop over data dimensions and create text annotations.
+        fmt =  'd'
+        thresh = cm.max() / 2.
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(j, i, format(cm[i, j], fmt),
+                        ha="center", va="center",
+                        color="white" if cm[i, j] > thresh else "black")
+        fig.tight_layout()
+        plt.show()
+        return ax
 
 
 
@@ -188,20 +254,33 @@ def model2vec(model,data):
 
 
 if __name__ == "__main__":
-    batch = 1
-    file_paths = [r"D:\six\code\malicious_detection\data\data_normalTrafficTest",r"D:\six\code\malicious_detection\data\data_anomalousTrafficTest"]
+    # batch = 1
+    # file_paths = [r"D:\six\code\malicious_detection\data\data_normalTrafficTest",r"D:\six\code\malicious_detection\data\data_anomalousTrafficTest"]
 
-    data,end_path_set,arg_name_set,arg_val_set,labels = data2sen_e(file_paths,batch)
+    # data,end_path_set,arg_name_set,arg_val_set,labels = data2sen_e(file_paths,batch)
 
-    # data_file = r"D:\six\code\malicious_detection\data\demo.txt"
-    # with open(data_file) as fp:
-    #     data = fp.readlines()
-    # data = [d.strip().split() for d in data]
-    # d = groupBy(data,6,4)
-    l = groupBy(labels,6,4)
-    l = [min(li) for li in l]
-    np.save("labels_new",l,allow_pickle=True)
+    # # data_file = r"D:\six\code\malicious_detection\data\demo.txt"
+    # # with open(data_file) as fp:
+    # #     data = fp.readlines()
+    # # data = [d.strip().split() for d in data]
+    # # d = groupBy(data,6,4)
+    # l = groupBy(labels,6,4)
+    # l = [min(li) for li in l]
+    # np.save("labels_new",l,allow_pickle=True)
     # m = doc2vec_g(d)
     # model2vec(m,d)
+
+    aa=[[5354,1,0,0,8,0,1,1,0,0],
+    [4,59,0,0,0,0,0,0,0,0],
+    [19,0,4,2,8,0,0,0,0,0],
+    [1,0,1,39,1,0,0,0,0,0],
+    [9,0,0,1,428,0,3,3,0,0],
+    [4,0,0,0,0,27,0,0,1,0],
+    [5,0,0,0,0,0,253,0,0,0],
+    [2,0,0,0,9,0,0,551,1,0],
+    [6,0,0,0,3,0,0,1,54,0],
+    [15,0,0,1,0,0,0,0,0,0]]
+    aa = np.array(aa)
+    plot_confusion_matrix(aa,classes=range(10))
 
 
